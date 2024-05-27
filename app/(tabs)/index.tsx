@@ -12,26 +12,24 @@ interface Order {
   clientId: number;
   totalAmount: number;
   status: string;
-  adress: string;
-  products: Product[];
+  adress?: string; // Since the provided sample data does not include 'adress', making it optional
+  products?: Product[]; // Same for 'products', making it optional
   error?: boolean;
 }
 
 export default function OrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [clientIdFilter, setClientIdFilter] = useState<string>('');
-  const orderIds = [1, 2, 3, 4, 5];
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const fetchedOrders: Order[] = await Promise.all(
-        orderIds.map(id => 
-          fetch(`http://localhost:3000/order/${id}`)
-            .then(res => res.json())
-            .catch(() => ({ id, error: true }))
-        )
-      );
-      setOrders(fetchedOrders);
+      try {
+        const response = await fetch(`http://10.0.2.2:3000//order`);
+        const data: Order[] = await response.json();
+        setOrders(data);
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+      }
     };
 
     fetchOrders();
@@ -62,14 +60,18 @@ export default function OrdersScreen() {
               <Text style={styles.orderText}>Client ID: {order.clientId}</Text>
               <Text style={styles.orderText}>Total Amount: {order.totalAmount}</Text>
               <Text style={styles.orderText}>Status: {order.status}</Text>
-              <Text style={styles.orderText}>Address: {order.adress}</Text>
-              <Text style={styles.orderText}>Products:</Text>
-              {order.products.map(product => (
-                <View key={product.productId} style={styles.productContainer}>
-                  <Text style={styles.productText}>Product ID: {product.productId}</Text>
-                  <Text style={styles.productText}>Quantity: {product.quantity}</Text>
-                </View>
-              ))}
+              {order.adress && <Text style={styles.orderText}>Address: {order.adress}</Text>}
+              {order.products && order.products.length > 0 && (
+                <>
+                  <Text style={styles.orderText}>Products:</Text>
+                  {order.products.map(product => (
+                    <View key={product.productId} style={styles.productContainer}>
+                      <Text style={styles.productText}>Product ID: {product.productId}</Text>
+                      <Text style={styles.productText}>Quantity: {product.quantity}</Text>
+                    </View>
+                  ))}
+                </>
+              )}
             </>
           )}
         </View>
