@@ -36,7 +36,7 @@ export default function OrdersScreen() {
   }, []);
 
   const filteredOrders = clientIdFilter
-    ? orders.filter(order => order.clientId.toString() === clientIdFilter)
+    ? orders.filter(order => order.clientId.toString() === clientIdFilter).reverse()
     : [];
 
   return (
