@@ -24,7 +24,7 @@ export default function OrdersScreen() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`http://10.0.2.2:3000//order`);
+        const response = await fetch(`http://10.0.2.2:3000/order`);
         const data: Order[] = await response.json();
         setOrders(data);
       } catch (error) {
@@ -37,7 +37,7 @@ export default function OrdersScreen() {
 
   const filteredOrders = clientIdFilter
     ? orders.filter(order => order.clientId.toString() === clientIdFilter)
-    : orders;
+    : [];
 
   return (
     <View style={styles.container}>
