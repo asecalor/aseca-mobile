@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface Product {
   productId: number;
@@ -12,9 +12,9 @@ interface Order {
   clientId: number;
   totalAmount: number;
   status: string;
-  adress?: string; // Since the provided sample data does not include 'adress', making it optional
-  products?: Product[]; // Same for 'products', making it optional
+  address?: string;
   error?: boolean;
+  products?: Product[];
 }
 
 export default function OrdersScreen() {
@@ -35,6 +35,18 @@ export default function OrdersScreen() {
     fetchOrders();
   }, []);
 
+  const fetchOrderProducts = async (orderId: number) => {
+    try {
+      const response = await fetch(`http://10.0.2.2:3000/order/${orderId}`);
+      const data: Order = await response.json();
+      setOrders(prevOrders =>
+        prevOrders.map(order => (order.id === orderId ? { ...order, ...data } : order))
+      );
+    } catch (error) {
+      console.error(`Failed to fetch products for order ${orderId}:`, error);
+    }
+  };
+
   const filteredOrders = clientIdFilter
     ? orders.filter(order => order.clientId.toString() === clientIdFilter)
     : [];
@@ -50,32 +62,32 @@ export default function OrdersScreen() {
         keyboardType="numeric"
       />
       {filteredOrders.map(order => (
-        <View key={order.id} style={styles.orderContainer}>
-          {order.error ? (
-            <Text style={styles.errorText}>Failed to fetch order with ID: {order.id}</Text>
-          ) : (
+        <TouchableOpacity
+          key={order.id}
+          onPress={() => fetchOrderProducts(order.id)}
+          style={styles.orderContainer}
+        >
+          <Text style={styles.orderText}>Order ID: {order.id}</Text>
+          <Text style={styles.orderText}>Provider ID: {order.providerId}</Text>
+          <Text style={styles.orderText}>Client ID: {order.clientId}</Text>
+          <Text style={styles.orderText}>Total Amount: {order.totalAmount}</Text>
+          <Text style={styles.orderText}>Status: {order.status}</Text>
+          {order.address && <Text style={styles.orderText}>Address: {order.address}</Text>}
+          {order.products && order.products.length > 0 && (
             <>
-              <Text style={styles.orderText}>Order ID: {order.id}</Text>
-              <Text style={styles.orderText}>Provider ID: {order.providerId}</Text>
-              <Text style={styles.orderText}>Client ID: {order.clientId}</Text>
-              <Text style={styles.orderText}>Total Amount: {order.totalAmount}</Text>
-              <Text style={styles.orderText}>Status: {order.status}</Text>
-              {order.adress && <Text style={styles.orderText}>Address: {order.adress}</Text>}
-              {order.products && order.products.length > 0 && (
-                <>
-                  <Text style={styles.orderText}>Products:</Text>
-                  {order.products.map(product => (
-                    <View key={product.productId} style={styles.productContainer}>
-                      <Text style={styles.productText}>Product ID: {product.productId}</Text>
-                      <Text style={styles.productText}>Quantity: {product.quantity}</Text>
-                    </View>
-                  ))}
-                </>
-              )}
+              <Text style={styles.orderText}>Products:</Text>
+              {order.products.map(product => (
+                <View key={product.productId} style={styles.productContainer}>
+                  <Text style={styles.productText}>Product ID: {product.productId}</Text>
+                  <Text style={styles.productText}>Quantity: {product.quantity}</Text>
+                </View>
+              ))}
             </>
           )}
-        </View>
+          {order.error && <Text style={styles.orderText}>Failed to fetch products</Text>}
+        </TouchableOpacity>
       ))}
+      {filteredOrders.length === 0 && <Text>No orders found</Text>}
     </View>
   );
 }
@@ -112,9 +124,5 @@ const styles = StyleSheet.create({
   },
   productText: {
     fontSize: 14,
-  },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
   },
 });
